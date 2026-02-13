@@ -38,7 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'api',
+    'api', 
+    'users',
+    'tickets',
+    'management',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +86,9 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'users.User'
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -124,4 +131,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Only allow your frontend origin
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",  # Vue dev server
+]
+
+# Allow cookies/session headers
+CORS_ALLOW_CREDENTIALS = True
+
+
+
