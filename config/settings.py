@@ -38,11 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'rest_framework',
+    'users',  # Your users app
     'api', 
-    'users',
     'tickets',
     'management',
-    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -89,7 +89,6 @@ DATABASES = {
 AUTH_USER_MODEL = 'users.User'
 
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -131,13 +130,22 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Only allow your frontend origin
+# Session settings (important for Vue frontend with credentials: 'include')
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (default)
+SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # Allows cookie to be sent with same-site requests
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+
+# CSRF settings
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # False so JavaScript can read it (if needed)
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8080']
+
+# CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",  # Vue dev server
 ]
 
 # Allow cookies/session headers
 CORS_ALLOW_CREDENTIALS = True
-
-
-

@@ -3,25 +3,39 @@ from .models import User
 from django.contrib.auth.password_validation import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(write_only=True, required=True)  # matches frontend
+    # Match frontend field name (full_name)
+    full_name = serializers.CharField(write_only=True, required=True, allow_blank=False)
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
 
     class Meta:
         model = User
-        fields = ('name', 'email', 'password', 'role')  # include role if sent from frontend
+        fields = ('full_name', 'email', 'password')  # Remove role as frontend doesn't send it
 
     def create(self, validated_data):
-        name = validated_data.pop('name')  # get full name from frontend
+        full_name = validated_data.pop('full_name', '')
         password = validated_data.pop('password')
-        role = validated_data.pop('role', 'User')  # default to 'User' if not provided
-
+        
         # Use email as username
+        email = validated_data.get('email')
+        
+        # Split full_name into first_name and last_name if needed
+        # For simplicity, we'll put the whole name in first_name
+        first_name = full_name.strip()
+        if not first_name and email:
+            first_name = email.split('@', 1)[0]
+
         user = User(
-            username=validated_data['email'],
-            email=validated_data['email'],
-            first_name=name,
-            role=role
+            username=email,
+            email=email,
+            first_name=first_name,
+            role='User'  # Default role for new registrations
         )
         user.set_password(password)
         user.save()
         return user
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'role')
