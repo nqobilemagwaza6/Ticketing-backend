@@ -34,38 +34,40 @@ def login_user(request):
     """
     email = request.data.get('email')
     password = request.data.get('password')
-    
-    if not email or not password:
-        return Response(
-            {'message': 'Please provide both email and password'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
-    # Authenticate using email as username
-    user = authenticate(request, username=email, password=password)
-    
+    if not email or not password:
+        return Response({'message': 'Please provide both email and password'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user_obj = User.objects.get(email=email)
+        username = user_obj.username
+    except User.DoesNotExist:
+        return Response({'message': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    user = authenticate(request, username=username, password=password)
+
     if user is not None:
-        # Create session (this is what frontend expects with credentials: 'include')
         login(request, user)
-        
-        # Return user data in the format frontend expects
-        # Make sure role is lowercase for frontend comparison
-        role_lower = user.role.lower() if user.role else 'user'
-        
+
+
+        # Normalize role to lowercase for frontend
+        if user.is_superuser:
+            role_lower = 'admin'
+        elif user.role:
+            role_lower = user.role.lower()
+        else:
+            role_lower = 'user'
         return Response({
             'message': 'Login successful',
             'user': {
                 'id': user.id,
                 'email': user.email,
-                'full_name': user.first_name,  # frontend uses this field
-                'role': role_lower,  # frontend checks role for redirect (expects 'admin' or 'user')
+                'full_name': user.first_name,
+                'role': role_lower,
             }
         }, status=status.HTTP_200_OK)
     else:
-        return Response(
-            {'message': 'Invalid email or password.'},  # Match frontend error message
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+        return Response({'message': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 def logout_user(request):
@@ -91,9 +93,6 @@ def current_user(request):
 @api_view(['GET'])
 def users_list(request):
     """List all users (for admin purposes)"""
-    if not request.user.is_authenticated or request.user.role != 'Admin':
-        return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
-    
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
