@@ -39,10 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'users',  # Your users app
+    'users',
     'api', 
     'tickets',
     'management',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
@@ -131,7 +132,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session settings (important for Vue frontend with credentials: 'include')
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (default)
+SESSION_COOKIE_AGE = 1209600  
 SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'  # Allows cookie to be sent with same-site requests
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
@@ -142,10 +143,30 @@ CSRF_COOKIE_HTTPONLY = False  # False so JavaScript can read it (if needed)
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8080']
 
+# Email settings for password reset
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'isabelachana@gmail.com'
+EMAIL_HOST_PASSWORD = 'kugarlfqgrxtkgtj'
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'isabelachana@gmail.com'
+
+# Frontend URL for password reset links
+FRONTEND_URL = 'http://localhost:8080'  # Make sure this is 8080
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # Vue dev server
+    "http://localhost:8080",  # Your Vue dev server on port 8080
+    "http://127.0.0.1:8080",
+    "http://172.20.6.243:8080",  # Your network address
 ]
 
+# Update CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://172.20.6.243:8080',
+]
 # Allow cookies/session headers
 CORS_ALLOW_CREDENTIALS = True
