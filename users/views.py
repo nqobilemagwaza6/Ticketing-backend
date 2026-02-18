@@ -295,5 +295,10 @@ def deactivate_user(request, user_id):
     # Toggle active status
     user.is_active = not user.is_active
     user.save()
-    
-    return Response({'id': user.id, 'is_active': user.is_active, 'message': 'User status updated successfully.'})
+
+    return Response({
+        'id': user.id,
+        'is_active': user.is_active,
+        'last_login': user.last_login,  # send last login
+        'message': 'User status updated successfully.'
+    })
