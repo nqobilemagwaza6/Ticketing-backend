@@ -10,7 +10,15 @@ from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from .models import User
-from .serializers import AdminCreateUserSerializer, RegisterSerializer, UserSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
+from .serializers import (
+    AdminCreateUserSerializer,
+    AdminUpdateUserSerializer,
+    RegisterSerializer,
+    UserSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer,
+)
+
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
@@ -246,3 +254,46 @@ def admin_create_user(request):
         return Response(UserSerializer(user).data, status=201)
 
     return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_update_user(request, pk):
+
+    if request.user.role.lower() != 'admin':
+        return Response(
+            {'detail': 'You do not have permission to perform this action.'},
+            status=403
+        )
+
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found.'}, status=404)
+
+    serializer = AdminUpdateUserSerializer(user, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(UserSerializer(user).data, status=200)
+
+    return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def deactivate_user(request, user_id):
+    """
+    Admin can activate or deactivate a user.
+    """
+    if not request.user.role or request.user.role.lower() != 'admin':
+        return Response({'detail': 'You do not have permission to perform this action.'}, status=403)
+    
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found.'}, status=404)
+    
+    # Toggle active status
+    user.is_active = not user.is_active
+    user.save()
+    
+    return Response({'id': user.id, 'is_active': user.is_active, 'message': 'User status updated successfully.'})

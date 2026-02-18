@@ -103,3 +103,27 @@ This link will expire in 24 hours.
         )
 
         return user
+class AdminUpdateUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'email', 'role', 'is_active')
+
+    def update(self, instance, validated_data):
+        email = validated_data.get('email', instance.email)
+
+        # Keep username synced with email
+        instance.email = email
+        instance.username = email
+
+        # Ensure first_name is never empty
+        first_name = validated_data.get('first_name', instance.first_name)
+        if not first_name and email:
+            first_name = email.split('@')[0]
+
+        instance.first_name = first_name
+        instance.role = validated_data.get('role', instance.role)
+        instance.is_active = validated_data.get('is_active', instance.is_active)
+
+        instance.save()
+        return instance
