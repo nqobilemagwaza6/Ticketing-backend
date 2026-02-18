@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework.authtoken',
     'users',
     'api', 
     'tickets',
@@ -164,9 +165,17 @@ CORS_ALLOWED_ORIGINS = [
 
 # Update CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://172.20.6.243:8080',
+    'http://*', # Allows any HTTP domain to send CSRF tokens
+    'https://*', # Also include HTTPS if your frontend might use it
 ]
 # Allow cookies/session headers
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

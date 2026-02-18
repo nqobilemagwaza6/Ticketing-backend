@@ -3,15 +3,18 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.urls import reverse
 from .models import User
-from .serializers import RegisterSerializer, UserSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
+from .serializers import AdminCreateUserSerializer, RegisterSerializer, UserSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
+
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -29,11 +32,12 @@ def register_user(request):
     
     return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
+# users/views.py
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    """Authenticate a user by email and password and create a session."""
+    """Authenticate a user by email and return a token for SPA login"""
     email = request.data.get('email')
     password = request.data.get('password')
 
@@ -49,18 +53,15 @@ def login_user(request):
     user = authenticate(request, username=username, password=password)
 
     if user is not None:
-        login(request, user)
+        # Create or get a token for this user
+        token, _ = Token.objects.get_or_create(user=user)
 
+        # Normalize role
+        role_lower = 'admin' if user.is_superuser else (user.role.lower() if user.role else 'user')
 
-        # Normalize role to lowercase for frontend
-        if user.is_superuser:
-            role_lower = 'admin'
-        elif user.role:
-            role_lower = user.role.lower()
-        else:
-            role_lower = 'user'
         return Response({
             'message': 'Login successful',
+            'token': token.key,  # <-- send token to frontend
             'user': {
                 'id': user.id,
                 'email': user.email,
@@ -68,12 +69,8 @@ def login_user(request):
                 'role': role_lower,
             }
         }, status=status.HTTP_200_OK)
-    else:
-        return Response(
-            {'message': 'Invalid email or password.'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
-
+    
+    return Response({'message': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 @api_view(['POST'])
 def logout_user(request):
     """Log out the current user"""
@@ -98,6 +95,14 @@ def current_user(request):
 @api_view(['GET'])
 def users_list(request):
     """List all users (for admin purposes)"""
+    # Check if user is authenticated and has the correct role
+    if not request.user.is_authenticated:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=403)
+
+    if not hasattr(request.user, 'role') or request.user.role.lower() != 'admin':
+        return Response({'detail': 'You do not have permission to perform this action.'}, status=403)
+
+    # Fetch all users and serialize
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
@@ -224,3 +229,20 @@ def reset_password(request):
             {'detail': 'Invalid reset link'},
             status=status.HTTP_400_BAD_REQUEST
         )
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_create_user(request):
+
+    if request.user.role.lower() != 'admin':
+        return Response(
+            {'detail': 'You do not have permission to perform this action.'},
+            status=403
+        )
+
+    serializer = AdminCreateUserSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response(UserSerializer(user).data, status=201)
+
+    return Response(serializer.errors, status=400)

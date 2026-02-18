@@ -10,4 +10,6 @@ urlpatterns = [
     # Password reset endpoints
     path('forgot-password/', views.forgot_password, name='forgot-password'),
     path('reset-password/', views.reset_password, name='reset-password'),
+    path('admin_create_user/', views.admin_create_user, name='admin_create_user'),
+
 ]
