@@ -5,5 +5,5 @@ urlpatterns = [
     path('create_ticket/', views.create_ticket, name='create_ticket'),
     path('tickets/<int:pk>/', views.ticket_detail, name='ticket_detail'),  # detail view
     path('tickets/', views.create_ticket, name='create_ticket'),
-
+    path('tickets/<int:pk>/assign/', views.assign_ticket, name='assign_ticket'),  # assign ticket
 ]
