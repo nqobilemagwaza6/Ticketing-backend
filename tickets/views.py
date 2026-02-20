@@ -12,7 +12,8 @@ def create_ticket(request):
     # GET: Fetch tickets
     if request.method == 'GET':
 
-        if request.user.is_staff:
+        if request.user.is_staff or request.user.role == 'Support':
+
             # Admin sees ALL tickets
             tickets = Ticket.objects.all().order_by('-created_at')
         else:
@@ -37,7 +38,8 @@ def create_ticket(request):
 @permission_classes([IsAuthenticated])
 def ticket_detail(request, pk):
     try:
-        if request.user.is_staff:
+        if request.user.is_staff or request.user.role == 'Support':
+
             ticket = Ticket.objects.get(pk=pk)
         else:
             ticket = Ticket.objects.get(pk=pk, user=request.user)
@@ -51,16 +53,34 @@ def ticket_detail(request, pk):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def assign_ticket(request, pk):
-    if not request.user.is_staff:
-        return Response({'detail': 'Not authorized'}, status=403)
-
     try:
         ticket = Ticket.objects.get(pk=pk)
     except Ticket.DoesNotExist:
         return Response({'detail': 'Ticket not found'}, status=404)
 
-    serializer = TicketSerializer(ticket, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
+    # Admin assigning a ticket
+    if request.user.is_staff and 'assigned_to' in request.data:
+        serializer = TicketSerializer(ticket, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()  # This will automatically set status = In Progress
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    # Support marking ticket as resolved
+    elif ticket.assigned_to == request.user and request.data.get('status') == Ticket.RESOLVED:
+        ticket.status = Ticket.RESOLVED
+        ticket.save()
+        serializer = TicketSerializer(ticket)
         return Response(serializer.data)
-    return Response(serializer.errors, status=400)
+
+    return Response({'detail': 'Not authorized or nothing to update'}, status=403)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def assigned_tickets(request):
+    user = request.user
+    tickets = Ticket.objects.filter(assigned_to=user).order_by('-created_at')
+    serializer = TicketSerializer(tickets, many=True)
+    return Response(serializer.data)
