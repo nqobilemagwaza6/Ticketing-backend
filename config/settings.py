@@ -142,7 +142,7 @@ SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False  # False so JavaScript can read it (if needed)
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8080']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8080','https://ticket-management-system-aw70.onrender.com']
 
 # Email settings for password reset
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
