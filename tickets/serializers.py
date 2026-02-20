@@ -33,7 +33,7 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = '__all__'
-        read_only_fields = ['user', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at']
 
     def get_agent(self, obj):
         if obj.assigned_to:
