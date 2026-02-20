@@ -7,6 +7,17 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.conf import settings
 from django.core.mail import send_mail
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+# REMOVE these imports - they belong in tickets app
+# from .models import Ticket, Comment  # REMOVE THIS LINE
+
+# REMOVE these serializers - they belong in tickets app
+# class CommentSerializer(serializers.ModelSerializer): ...
+# class TicketSerializer(serializers.ModelSerializer): ...
 
 class RegisterSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(write_only=True, required=True, allow_blank=False)
@@ -49,9 +60,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, validators=[validate_password])
 
-
 class AdminCreateUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('id', 'first_name', 'email', 'role', 'is_active')
@@ -59,7 +68,7 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data.get('email')
 
-        # 🔐 Generate random temporary password
+        # Generate random temporary password
         temp_password = secrets.token_urlsafe(10)
 
         # Ensure first_name is never empty
@@ -78,12 +87,12 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
         user.set_password(temp_password)
         user.save()
 
-        # 🔗 Generate reset link
+        # Generate reset link
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
-        # 📧 Send email
+        # Send email
         send_mail(
             'Set Your Password',
             f"""
@@ -103,8 +112,8 @@ This link will expire in 24 hours.
         )
 
         return user
-class AdminUpdateUserSerializer(serializers.ModelSerializer):
 
+class AdminUpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'first_name', 'email', 'role', 'is_active')

@@ -1,33 +1,61 @@
-from django.conf import settings
 from django.db import models
+from django.contrib.auth import get_user_model
+import os
+
+User = get_user_model()
+
+def ticket_attachment_path(instance, filename):
+    # File will be uploaded to MEDIA_ROOT/tickets/user_<id>/<filename>
+    return f'tickets/user_{instance.user.id}/{filename}'
 
 class Ticket(models.Model):
-    OPEN = 'Open'
-    IN_PROGRESS = 'In Progress'
-    RESOLVED = 'Resolved'
-    TICKET_STATUS_CHOICES = [
-        (OPEN, 'Open'),
-        (IN_PROGRESS, 'In Progress'),
-        (RESOLVED, 'Resolved'),
+    STATUS_CHOICES = [
+        ('Open', 'Open'),
+        ('In Progress', 'In Progress'),
+        ('Resolved', 'Resolved'),
     ]
-
-    title = models.CharField(max_length=255)
-    category = models.CharField(
-        max_length=50,
-        choices=[('Hardware', 'Hardware'), ('Software', 'Software'), ('Network', 'Network'), ('Other', 'Other')]
-    )
+    
+    CATEGORY_CHOICES = [
+        ('Hardware', 'Hardware'),
+        ('Software', 'Software'),
+        ('Network', 'Network'),
+        ('Other', 'Other'),
+    ]
+    
+    title = models.CharField(max_length=200)
     description = models.TextField()
-    status = models.CharField(max_length=20, choices=TICKET_STATUS_CHOICES, default=OPEN)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
+    priority = models.CharField(max_length=20, default='Medium')
+    
+    # Relationships
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
+    
+    # Attachments
+    attachment = models.FileField(upload_to=ticket_attachment_path, null=True, blank=True)
+    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Correct reference to custom user model using settings.AUTH_USER_MODEL
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='tickets', on_delete=models.CASCADE)
-    assigned_to = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='assigned_tickets', null=True, blank=True, on_delete=models.SET_NULL
-    )
-
-    attachment = models.FileField(upload_to='tickets/attachments/', null=True, blank=True)
-
+    
     def __str__(self):
-        return self.title
+        return f"#{self.id} - {self.title}"
+    
+    def filename(self):
+        return os.path.basename(self.attachment.name) if self.attachment else None
+    
+    class Meta:
+        ordering = ['-created_at']
+
+class Comment(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Comment by {self.user.email} on ticket #{self.ticket.id}"
+    
+    class Meta:
+        ordering = ['created_at']
