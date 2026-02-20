@@ -1,0 +1,13 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('create_ticket/', views.create_ticket, name='create_ticket'),
+    path('tickets/<int:pk>/', views.ticket_detail, name='ticket_detail'),  # detail view
+    path('tickets/', views.create_ticket, name='create_ticket'),
+    path('tickets/<int:pk>/assign/', views.assign_ticket, name='assign_ticket'),  # assign ticket
+    path('assigned_tickets/', views.assigned_tickets, name='assigned_tickets'),
+
+    path('tickets/<int:pk>/comments/', views.ticket_comments, name='ticket_comments'),  # new comments endpoint
+]
+
