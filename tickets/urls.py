@@ -8,4 +8,6 @@ urlpatterns = [
     path('tickets/<int:pk>/assign/', views.assign_ticket, name='assign_ticket'),  # assign ticket
     path('assigned_tickets/', views.assigned_tickets, name='assigned_tickets'),
 
+    path('tickets/<int:pk>/comments/', views.ticket_comments, name='ticket_comments'),  # new comments endpoint
 ]
+
