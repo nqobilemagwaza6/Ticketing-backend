@@ -101,6 +101,8 @@ Hello {user.first_name},
 
 An account has been created for you.
 
+Your temporary password is: {temp_password}
+
 Please set your password using the link below:
 
 {reset_link}
