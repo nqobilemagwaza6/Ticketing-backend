@@ -148,14 +148,18 @@ CSRF_COOKIE_SECURE = True  # Set to True in production with HTTPS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8080','https://ticket-management-system-aw70.onrender.com']
 
 # Email settings for password reset
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'isabelachana@gmail.com'
-EMAIL_HOST_PASSWORD = 'kugarlfqgrxtkgtj'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'isabelachana@gmail.com'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'isabelachana@gmail.com'
+# EMAIL_HOST_PASSWORD = 'kugarlfqgrxtkgtj'
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = 'isabelachana@gmail.com'
+# For testing emails without a real SMTP server
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Default "from" email for outgoing emails
+DEFAULT_FROM_EMAIL = 'no-reply@example.com'
 # Frontend URL for password reset links
 FRONTEND_URL = 'http://localhost:8080'  # Make sure this is 8080
 
