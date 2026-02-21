@@ -241,8 +241,7 @@ def reset_password(request):
 @permission_classes([IsAuthenticated])
 def admin_create_user(request):
 
-    if request.user.role.lower() != 'admin':
-        return Response(
+    if not (request.user.role.lower() == 'admin' or request.user.is_superuser):        return Response(
             {'detail': 'You do not have permission to perform this action.'},
             status=403
         )
