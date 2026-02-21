@@ -68,7 +68,7 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data.get('email')
 
-        # Generate random temporary password
+        # Generate temporary password
         temp_password = secrets.token_urlsafe(10)
 
         # Ensure first_name is never empty
@@ -76,6 +76,7 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
         if not first_name and email:
             first_name = email.split('@')[0]
 
+        # Create user
         user = User(
             username=email,
             email=email,
@@ -92,10 +93,9 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
-        # Send email
-        send_mail(
-            'Set Your Password',
-            f"""
+        # Email message
+        subject = "Set Your Password"
+        message = f"""
 Hello {user.first_name},
 
 An account has been created for you.
@@ -105,14 +105,25 @@ Please set your password using the link below:
 {reset_link}
 
 This link will expire in 24 hours.
-            """,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
+"""
+
+        # 🔥 Send email in background thread (prevents worker timeout)
+        def send_email_async():
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                print("Email sent successfully")
+            except Exception as e:
+                print("Email sending failed:", str(e))
+
+        threading.Thread(target=send_email_async).start()
 
         return user
-
 class AdminUpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
