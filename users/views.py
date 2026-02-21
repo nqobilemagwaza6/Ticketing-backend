@@ -241,7 +241,7 @@ def reset_password(request):
 @permission_classes([IsAuthenticated])
 def admin_create_user(request):
 
-    if not (request.user.role.lower() == 'admin'):
+    if not request.user.is_superuser:
         return Response(
             {'detail': 'You do not have permission to perform this action.'},
             status=403
@@ -259,7 +259,7 @@ def admin_create_user(request):
 @permission_classes([IsAuthenticated])
 def admin_update_user(request, pk):
 
-    if request.user.role.lower() != 'admin':
+    if not request.user.is_superuser:
         return Response(
             {'detail': 'You do not have permission to perform this action.'},
             status=403
@@ -284,7 +284,7 @@ def deactivate_user(request, user_id):
     """
     Admin can activate or deactivate a user.
     """
-    if not request.user.role or request.user.role.lower() != 'admin':
+    if not request.user.is_superuser:
         return Response({'detail': 'You do not have permission to perform this action.'}, status=403)
     
     try:
