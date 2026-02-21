@@ -156,12 +156,17 @@ CSRF_TRUSTED_ORIGINS = ['http://localhost:8080','https://ticket-management-syste
 # EMAIL_USE_TLS = True
 # DEFAULT_FROM_EMAIL = 'isabelachana@gmail.com'
 # For testing emails without a real SMTP server
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+INSTALLED_APPS += ["anymail"]
 
-# Default "from" email for outgoing emails
-DEFAULT_FROM_EMAIL = 'no-reply@example.com'
-# Frontend URL for password reset links
-FRONTEND_URL = 'http://localhost:8080'  # Make sure this is 8080
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": os.environ.get("BREVO_API_KEY"),
+}
+
+DEFAULT_FROM_EMAIL = "nqobilemagwaza6@gmail.com"  # must be the email you verified in Brevo
+FRONTEND_URL = "https://ticket-management-system-aw70.onrender.com"
+
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
