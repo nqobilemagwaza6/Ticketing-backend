@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+import threading 
 from django.contrib.auth.password_validation import validate_password
 import secrets
 from django.contrib.auth.tokens import default_token_generator
