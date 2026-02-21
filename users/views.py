@@ -101,18 +101,16 @@ def current_user(request):
     return Response({'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def users_list(request):
     """List all users (for admin purposes)"""
-    # Check if user is authenticated and has the correct role
-    if not request.user.is_authenticated:
-        return Response({'detail': 'Authentication credentials were not provided.'}, status=403)
-
-    if not hasattr(request.user, 'role') or request.user.role.lower() != 'admin':
+    if not request.user.is_superuser:
         return Response({'detail': 'You do not have permission to perform this action.'}, status=403)
 
-    # Fetch all users and serialize
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
     return Response(serializer.data)
 
 @csrf_exempt
