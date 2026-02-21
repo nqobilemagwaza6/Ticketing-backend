@@ -238,20 +238,26 @@ def reset_password(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def admin_create_user(request):
-
     if not request.user.is_superuser:
-        return Response(
-            {'detail': 'You do not have permission to perform this action.'},
-            status=403
-        )
+        return Response({'detail': 'You do not have permission to perform this action.'}, status=403)
 
     serializer = AdminCreateUserSerializer(data=request.data)
 
     if serializer.is_valid():
         user = serializer.save()
+        # Return serialized user data
         return Response(UserSerializer(user).data, status=201)
 
-    return Response(serializer.errors, status=400)
+    # Wrap errors in a single message
+    error_messages = {}
+    for field, errors in serializer.errors.items():
+        error_messages[field] = errors[0] if errors else "Invalid value"
+
+    return Response({
+        "message": "Validation failed",
+        "errors": error_messages
+    }, status=400)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
