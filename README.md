@@ -1,7 +1,8 @@
-# Ticketing-backend
 
 # Admin login creditials
 email = tms@gmail.com password = TMS#5
+
+ ###  when logged in as ADMIN Add support User using valid email for password retrieval 
 
 # 🎫 Ticket Management System (TMS)
 
